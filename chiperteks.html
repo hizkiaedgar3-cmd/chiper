@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiper Text - Akses Terproteksi</title>
+    <style>
+        /* CSS Styling */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        /* Gaya untuk layar Login */
+        #login-screen {
+            text-align: center;
+        }
+
+        #login-screen h1 {
+            color: #d9534f;
+            text-shadow: 0 0 5px #d9534f;
+        }
+
+        /* Container baru untuk input password dan tombol mata */
+        .password-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        #login-screen input {
+            width: 100%;
+            padding-right: 40px; /* Beri ruang untuk tombol mata */
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #00ffff;
+        }
+
+        #login-button {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #login-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Gaya untuk aplikasi Chiper (Disembunyikan secara default) */
+        #cipher-app {
+            display: none; 
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* ... Gaya lainnya tetap sama ... */
+        h1 { color: #00ffff; text-align: center; margin-bottom: 20px; text-shadow: 0 0 5px #00ffff; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #aaa; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #555; background-color: #333; color: white; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        textarea { height: 100px; resize: vertical; }
+        .controls-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+        .toggle-group { display: flex; flex-grow: 1; }
+        .toggle-group button, .clear-button { padding: 10px 15px; border: 1px solid #555; background-color: #333; color: #fff; cursor: pointer; transition: background-color 0.3s, color 0.3s; flex-grow: 1; }
+        .toggle-group button.active { background-color: #00ffff; color: #1a1a1a; border-color: #00ffff; font-weight: bold; }
+        .clear-button { background-color: #d9534f; border-color: #d43f3a; }
+        .clear-button:hover { background-color: #c9302c; }
+    </style>
+</head>
+<body>
+
+    <!-- Layar Login -->
+    <div id="login-screen" class="container">
+        <h1>🔐 Akses Terproteksi 💻</h1>
+        <p>Masukkan kata sandi untuk melanjutkan:</p>
+        
+        <div class="password-container">
+            <input type="password" id="password-input" placeholder="Kata Sandi...">
+            <!-- Tombol mata/toggle baru -->
+            <button class="toggle-password" onclick="togglePasswordVisibility()">🙈</button>
+        </div>
+
+        <button id="login-button" onclick="checkPassword()">Masuk</button>
+        <p id="error-message" style="color: red; display: none; margin-top: 10px;">Kata sandi salah!</p>
+    </div>
+
+    <!-- Aplikasi Chiper Text (Tersembunyi) -->
+    <div id="cipher-app" class="container">
+        <h1>🔐Chiper Text💻</h1>
+
+        <div class="form-group">
+            <label for="encryptionKey">Kunci (Angka/Huruf):</label>
+            <input type="text" id="encryptionKey" placeholder="Masukkan kunci di sini...">
+        </div>
+
+        <div class="controls-row">
+            <div class="toggle-group">
+                <button id="modeEncrypt" class="active" onclick="setMode(false)">Enkripsi</button>
+                <button id="modeDecrypt" onclick="setMode(true)">Dekripsi</button>
+            </div>
+            <button class="clear-button" onclick="clearFields()">Bersihkan</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="inputText">Teks Masukan (Ketik di sini):</label>
+            <textarea id="inputText" placeholder="Teks akan otomatis diproses saat Anda mengetik..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="outputText">Teks Hasil (Live Output):</label>
+            <textarea id="outputText" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        // --- Fungsi Login ---
+        const CORRECT_PASSWORD = "batangkuis"; 
+        
+        function checkPassword() {
+            const enteredPassword = document.getElementById('password-input').value;
+            const errorMessage = document.getElementById('error-message');
+            
+            if (enteredPassword === CORRECT_PASSWORD) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('cipher-app').style.display = 'block'; 
+                liveUpdate();
+            } else {
+                errorMessage.style.display = 'block';
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+
+        // --- Fungsi Baru untuk Toggle Password Visibility ---
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password-input');
+            const toggleButton = document.querySelector('.toggle-password');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '👁️'; // Mata terbuka
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '🙈'; // Mata tertutup
+            }
+        }
+
+        // --- Fungsi Lainnya (Sama seperti sebelumnya) ---
+        function clearFields() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            liveUpdate(); 
+            document.getElementById('inputText').focus();
+        }
+
+        let isDecryptMode = false; 
+        function processVigenere(text, key, decrypt = false) {
+            let output = "";
+            const cleanKey = key.replace(/[^a-zAZ0-9]/g, '');
+            if (cleanKey.length === 0) return text;
+            for (let i = 0, j = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char.match(/[a-z]/i)) {
+                    const isUpperCase = char === char.toUpperCase();
+                    const base = isUpperCase ? 65 : 97;
+                    const charOffset = char.charCodeAt(0) - base;
+                    const keyChar = cleanKey[j % cleanKey.length];
+                    let keyOffset;
+                    if (keyChar.match(/[0-9]/)) { keyOffset = parseInt(keyChar, 10); } else {
+                         const keyBase = keyChar === keyChar.toUpperCase() ? 65 : 97;
+                         keyOffset = keyChar.charCodeAt(0) - keyBase;
+                    }
+                    let newOffset;
+                    if (decrypt) { newOffset = (charOffset - keyOffset + 26) % 26; } else {
+                        newOffset = (charOffset + keyOffset) % 26;
+                    }
+                    output += String.fromCharCode(base + newOffset);
+                    j++; 
+                } else {
+                    output += char; 
+                }
+            }
+            return output;
+        }
+
+        function liveUpdate() {
+            const inputText = document.getElementById('inputText').value;
+            const outputText = document.getElementById('outputText');
+            const key = document.getElementById('encryptionKey').value;
+            outputText.value = processVigenere(inputText, key, isDecryptMode);
+        }
+
+        function setMode(decryptMode) {
+            isDecryptMode = decryptMode;
+            document.getElementById('modeEncrypt').classList.toggle('active', !decryptMode);
+            document.getElementById('modeDecrypt').classList.toggle('active', decryptMode);
+            const inputLabel = document.querySelector('label[for="inputText"]');
+            if (decryptMode) { inputLabel.textContent = "Teks Masukan (Ciphertext):"; } else { inputLabel.textContent = "Teks Masukan (Plaintext):"; }
+            liveUpdate();
+        }
+
+        document.getElementById('inputText').addEventListener('input', liveUpdate);
+        document.getElementById('encryptionKey').addEventListener('input', liveUpdate);
+
+        document.getElementById('password-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                checkPassword();
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('password-input').focus();
+        });
+    </script>
+
+</body>
+</html>
